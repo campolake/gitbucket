@@ -1,0 +1,124 @@
+@(commitId: String,
+  commit: util.JGitUtil.CommitInfo,
+  branches: List[String],
+  tags: List[String],
+  repository: service.RepositoryService.RepositoryInfo,
+  diffs: Seq[util.JGitUtil.DiffInfo],
+  oldCommitId: Option[String])(implicit context: app.Context)
+@import context._
+@import view.helpers._
+@import util.Implicits._
+@html.main(commit.shortMessage, Some(repository)){
+  @html.menu("code", repository){
+    <table class="table table-bordered">
+      <tr>
+        <th>
+          <div class="pull-right align-right">
+            <a href="@url(repository)/tree/@commit.id" class="btn btn-small">Browse code</a>
+          </div>
+          <div class="commit-log">@link(commit.summary, repository)</div>
+          @if(commit.description.isDefined){
+            <pre class="commit-description">@link(commit.description.get, repository)</pre>
+          }
+          <div class="small" style="font-weight: normal;">
+            @if(branches.nonEmpty){
+              <span class="muted">
+                <img src="@assets/common/images/branch.png"/>
+                @branches.zipWithIndex.map { case (branch, i) =>
+                  <a href="@url(repository)/tree/@encodeRefName(branch)" class="branch" id="branch-@i">@branch</a>
+                }
+              </span>
+            }
+            @if(tags.nonEmpty){
+              <span class="muted">
+                <img src="@assets/common/images/tag.png"/>
+                @tags.zipWithIndex.map { case (tag, i) =>
+                  <a href="@url(repository)/tree/@tag" class="tag" id="tag-@i">@tag</a>
+                }
+              </span>
+            }
+          </div>
+        </th>
+      </tr>
+      <tr>
+        <td>
+          @avatar(commit, 20)
+          @user(commit.committer, commit.mailAddress, "username strong")
+          <span class="muted">@datetime(commit.time)</span>
+          <div class="pull-right monospace small" style="text-align: right;">
+            <div>
+              @if(commit.parents.size == 0){
+                <span class="muted">0 parent</span>
+              }
+              @if(commit.parents.size == 1){
+                <span class="muted">1 parent</span>
+                <a href="@url(repository)/commit/@commit.parents(0)" class="commit-id">@commit.parents(0).substring(0, 7)</a>
+              }
+              <span class="muted">commit</span> @commit.id
+            </div>
+            @if(commit.parents.size > 1){
+              <div>
+                <span class="muted">@commit.parents.size parents
+                @commit.parents.map { parent =>
+                  <a href="@url(repository)/commit/@parent" class="commit-id">@parent.substring(0, 7)</a>
+                }.mkHtml(" + ")
+                </span>
+              </div>
+            }
+          </div>
+        </td>
+      </tr>
+    </table>
+    @helper.html.diff(diffs, repository, Some(commit.id), oldCommitId, true)
+  }
+}
+<script>
+$(function(){
+  $('a.branch:first, a.tag:first').css({
+    'font-weight': 'bold',
+    'color': '#555555'
+  });
+
+  @if(branches.size > 5){
+    // hide branches
+    @for(i <- 1 to branches.size - 2){
+      $('#branch-@i').hide();
+    }
+    // add omit link
+    $('#branch-@(branches.size - 1)').before(
+      $('<a href="javascript:void(0);" class="omit">...</a>').click(function(){
+        @for(i <- 1 to branches.size - 2){
+          $('#branch-@i').show();
+          this.remove();
+        }
+      })
+    );
+  }
+
+  @if(tags.size > 5){
+    // hide tags
+    @for(i <- 1 to tags.size - 2){
+      $('#tag-@i').hide();
+    }
+    // add omit link
+    $('#tag-@(tags.size - 1)').before(
+      $('<a href="javascript:void(0);" class="omit">...</a>').click(function(){
+        @for(i <- 1 to tags.size - 2){
+          $('#tag-@i').show();
+          this.remove();
+        }
+      })
+    );
+  }
+});
+</script>
+<style type="text/css">
+a.branch, a.tag {
+  color: #888888;
+  margin-right: 4px;
+}
+
+a.omit {
+  margin-right: 4px;
+}
+</style>
