@@ -1,3 +1,6 @@
+Clone from https://github.com/takezoe/gitbucket
+I add some features for my use .
+
 GitBucket [![Gitter chat](https://badges.gitter.im/takezoe/gitbucket.png)](https://gitter.im/takezoe/gitbucket) [![Build Status](https://buildhive.cloudbees.com/job/takezoe/job/gitbucket/badge/icon)](https://buildhive.cloudbees.com/job/takezoe/job/gitbucket/)
 =========
 
